@@ -6,10 +6,19 @@ spec:
   replicas: 1
   template:
     spec:
+      securityContext:
+        runAsNonRoot: false
       containers:
         - name: sample-app
           ports:
             - containerPort: 80
+          securityContext:
+            readOnlyRootFilesystem: false
+            runAsNonRoot: false
+            runAsUser: 0
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop: []
           livenessProbe:
             httpGet:
               path: /

@@ -8,6 +8,10 @@ resources:
   - configmap.yaml
 
 patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: sample-app
   - path: ingress-patch.yaml
     target:
       kind: Ingress

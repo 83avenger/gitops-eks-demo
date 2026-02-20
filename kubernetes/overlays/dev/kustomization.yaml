@@ -29,3 +29,7 @@ commonLabels:
     target:
       kind: Deployment
       name: sample-app
+  - path: image-patch.yaml
+    target:
+      kind: Deployment
+      name: sample-app

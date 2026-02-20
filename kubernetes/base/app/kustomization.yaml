@@ -10,7 +10,6 @@ resources:
   - pdb.yaml
   - networkpolicy.yaml
   - ingress.yaml
-  - externalsecret.yaml
 
 commonLabels:
   app.kubernetes.io/managed-by: argocd

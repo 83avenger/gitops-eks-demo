@@ -17,19 +17,10 @@ patches:
       kind: Ingress
       name: sample-app
 
-# CI pipeline updates this tag automatically on every push
 images:
   - name: ghcr.io/83avenger/sample-app
-    newName: ghcr.io/83avenger/sample-app
+    newName: nginx
     newTag: latest
 
 commonLabels:
   environment: dev
-  - path: image-patch.yaml
-    target:
-      kind: Deployment
-      name: sample-app
-  - path: image-patch.yaml
-    target:
-      kind: Deployment
-      name: sample-app

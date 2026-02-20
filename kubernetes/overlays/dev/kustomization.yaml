@@ -8,10 +8,6 @@ resources:
   - configmap.yaml
 
 patches:
-  - path: deployment-patch.yaml
-    target:
-      kind: Deployment
-      name: sample-app
   - path: ingress-patch.yaml
     target:
       kind: Ingress
@@ -19,7 +15,7 @@ patches:
 
 images:
   - name: ghcr.io/83avenger/sample-app
-    newName: nginx
+    newName: nginxinc/nginx-unprivileged
     newTag: latest
 
 commonLabels:

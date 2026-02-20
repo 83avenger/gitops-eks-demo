@@ -1,0 +1,22 @@
+# Tells Prometheus to scrape our sample-app pods
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sample-app
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - sample-app-dev
+      - sample-app-staging
+      - sample-app-prod
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s

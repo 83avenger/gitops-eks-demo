@@ -1,0 +1,94 @@
+# -----------------------------------------------------------------------------
+# ArgoCD Projects — RBAC and resource isolation
+# -----------------------------------------------------------------------------
+
+---
+# Platform Project: Infrastructure components (cluster-scoped)
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform infrastructure applications
+
+  sourceRepos:
+    - "https://github.com/YOUR_ORG/gitops-eks-demo.git"
+    - "https://charts.jetstack.io"
+    - "https://charts.external-secrets.io"
+    - "https://aws.github.io/eks-charts"
+    - "https://kubernetes.github.io/autoscaler"
+    - "https://open-policy-agent.github.io/gatekeeper/charts"
+    - "https://prometheus-community.github.io/helm-charts"
+    - "https://grafana.github.io/helm-charts"
+
+  destinations:
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  roles:
+    - name: platform-admin
+      description: Platform team has full access
+      policies:
+        - p, proj:platform:platform-admin, applications, *, platform/*, allow
+      groups:
+        - platform-team
+
+---
+# Apps Project: Business applications (namespace-scoped)
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  description: Business applications
+
+  sourceRepos:
+    - "https://github.com/YOUR_ORG/gitops-eks-demo.git"
+
+  destinations:
+    - namespace: dev
+      server: https://kubernetes.default.svc
+    - namespace: staging
+      server: https://kubernetes.default.svc
+    - namespace: prod
+      server: https://kubernetes.default.svc
+
+  # Apps cannot touch cluster-level resources
+  clusterResourceWhitelist: []
+
+  namespaceResourceWhitelist:
+    - group: "apps"
+      kind: "Deployment"
+    - group: "apps"
+      kind: "ReplicaSet"
+    - group: ""
+      kind: "Service"
+    - group: ""
+      kind: "ConfigMap"
+    - group: ""
+      kind: "ServiceAccount"
+    - group: "networking.k8s.io"
+      kind: "Ingress"
+    - group: "autoscaling"
+      kind: "HorizontalPodAutoscaler"
+    - group: "policy"
+      kind: "PodDisruptionBudget"
+
+  roles:
+    - name: dev-deployer
+      description: Dev team can sync dev environment
+      policies:
+        - p, proj:apps:dev-deployer, applications, sync, apps/frontend, allow
+        - p, proj:apps:dev-deployer, applications, sync, apps/backend, allow
+      groups:
+        - dev-team

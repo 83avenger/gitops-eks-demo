@@ -1,0 +1,25 @@
+clusterName: ${cluster_name}
+replicaCount: 2
+
+# Regional ECR image — avoids Docker Hub pull limits and cross-region latency.
+# ap-southeast-1 registry account: 602401143452
+image:
+  repository: 602401143452.dkr.ecr.${region}.amazonaws.com/amazon/aws-load-balancer-controller
+
+# VPC ID is required — controller uses it to discover subnets for ALBs
+vpcId: ${vpc_id}
+region: ${region}
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: ${role_arn}
+
+# Pod topology — spread across AZs
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: aws-load-balancer-controller

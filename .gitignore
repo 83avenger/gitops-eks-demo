@@ -1,0 +1,42 @@
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.terraform.lock.hcl
+terraform.tfvars
+!terraform.tfvars.example
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets - NEVER commit these
+*.pem
+*.key
+*-creds.json
+.env
+.env.*
+secrets/
+kubeconfig
+kubeconfig.*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Node
+node_modules/
+dist/
+coverage/
+*.log
+
+# Build artifacts
+*.tar.gz
+*.zip
+bin/

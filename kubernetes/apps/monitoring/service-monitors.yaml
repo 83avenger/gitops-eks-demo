@@ -1,0 +1,64 @@
+---
+# ServiceMonitor — tells Prometheus to scrape backend
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: backend
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack   # Must match Prometheus selector
+spec:
+  namespaceSelector:
+    matchNames:
+      - dev
+      - staging
+      - prod
+  selector:
+    matchLabels:
+      app: backend
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: frontend
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - dev
+      - staging
+      - prod
+  selector:
+    matchLabels:
+      app: frontend
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+
+---
+# PodMonitor — for pods that don't have services (batch jobs etc.)
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: argocd-metrics
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - argocd
+  selector:
+    matchLabels:
+      app.kubernetes.io/part-of: argocd
+  podMetricsEndpoints:
+    - port: metrics

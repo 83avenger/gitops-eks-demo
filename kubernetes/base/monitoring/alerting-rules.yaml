@@ -1,0 +1,90 @@
+# Custom PrometheusRules for sample-app
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sample-app-alerts
+  namespace: monitoring
+  labels:
+    app: kube-prometheus-stack
+    role: alert-rules
+spec:
+  groups:
+    - name: sample-app.availability
+      interval: 30s
+      rules:
+        # High error rate
+        - alert: SampleAppHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{job="sample-app",status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total{job="sample-app"}[5m])) > 0.05
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "High error rate on sample-app"
+            description: "Error rate is {{ $value | humanizePercentage }} (threshold 5%)"
+            runbook: "https://github.com/your-org/gitops-eks-demo/blob/main/monitoring/runbooks/high-error-rate.md"
+
+        # High latency
+        - alert: SampleAppHighLatency
+          expr: |
+            histogram_quantile(0.99,
+              sum(rate(http_request_duration_seconds_bucket{job="sample-app"}[5m])) by (le)
+            ) > 2
+          for: 5m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "High p99 latency on sample-app"
+            description: "p99 latency is {{ $value }}s (threshold 2s)"
+            runbook: "https://github.com/your-org/gitops-eks-demo/blob/main/monitoring/runbooks/high-latency.md"
+
+        # Pod crash looping
+        - alert: PodCrashLooping
+          expr: |
+            rate(kube_pod_container_status_restarts_total{namespace=~"sample-app-.*"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: critical
+            team: platform
+          annotations:
+            summary: "Pod {{ $labels.pod }} is crash looping"
+            description: "{{ $labels.pod }} in {{ $labels.namespace }} restarted {{ $value | humanize }} times in 15m"
+
+        # HPA maxed out
+        - alert: HPAMaxedOut
+          expr: |
+            kube_horizontalpodautoscaler_status_current_replicas{namespace=~"sample-app-.*"}
+            ==
+            kube_horizontalpodautoscaler_spec_max_replicas{namespace=~"sample-app-.*"}
+          for: 10m
+          labels:
+            severity: warning
+            team: platform
+          annotations:
+            summary: "HPA {{ $labels.horizontalpodautoscaler }} is at max replicas"
+            description: "HPA has been at max replicas for 10+ minutes. Consider increasing maxReplicas."
+
+    - name: sample-app.slo
+      rules:
+        # SLO: 99.9% availability over 30-day window
+        - record: sample_app:http_request_success_rate:5m
+          expr: |
+            1 - (
+              sum(rate(http_requests_total{job="sample-app",status=~"5.."}[5m]))
+              /
+              sum(rate(http_requests_total{job="sample-app"}[5m]))
+            )
+
+        - alert: SampleAppSLOBudgetBurn
+          expr: |
+            sample_app:http_request_success_rate:5m < 0.999
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "SLO error budget burning fast"
+            description: "Availability is {{ $value | humanizePercentage }} — SLO target is 99.9%"

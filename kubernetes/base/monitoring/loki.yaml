@@ -1,0 +1,48 @@
+# Loki for log aggregation (lightweight alternative to ELK)
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki-stack
+  namespace: argocd
+spec:
+  project: platform
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    chart: loki-stack
+    targetRevision: "2.10.2"
+    helm:
+      releaseName: loki-stack
+      valuesObject:
+        loki:
+          enabled: true
+          persistence:
+            enabled: true
+            size: 20Gi
+          config:
+            storage_config:
+              aws:
+                s3: "s3://your-loki-bucket/loki"
+                region: ap-southeast-1
+              boltdb_shipper:
+                active_index_directory: /data/loki/index
+                cache_location: /data/loki/index_cache
+        promtail:
+          enabled: true
+          config:
+            clients:
+              - url: http://loki-stack:3100/loki/api/v1/push
+            snippets:
+              extraRelabelConfigs:
+                - action: replace
+                  source_labels: [__meta_kubernetes_namespace]
+                  target_label: namespace
+                - action: replace
+                  source_labels: [__meta_kubernetes_pod_name]
+                  target_label: pod
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

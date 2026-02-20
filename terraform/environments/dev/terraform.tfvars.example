@@ -1,0 +1,12 @@
+# Copy this to terraform.tfvars and fill in your values
+# terraform.tfvars is gitignored — never commit real values
+
+aws_region         = "us-east-1"
+project_name       = "gitops-demo"
+owner              = "your-name"
+cost_center        = "engineering"
+vpc_cidr           = "10.0.0.0/16"
+kubernetes_version = "1.29"
+
+# Restrict to your office/VPN IP in production
+allowed_cidrs = ["YOUR_IP/32"]

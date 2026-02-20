@@ -1,0 +1,71 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform infrastructure applications
+
+  sourceRepos:
+    - "https://github.com/your-org/gitops-eks-demo"
+
+  destinations:
+    - namespace: "*"
+      server: https://kubernetes.default.svc
+
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  namespaceResourceWhitelist:
+    - group: "*"
+      kind: "*"
+
+  roles:
+    - name: platform-admin
+      description: Full access to platform project
+      policies:
+        - p, proj:platform:platform-admin, applications, *, platform/*, allow
+      groups:
+        - platform-team
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: applications
+  namespace: argocd
+spec:
+  description: Business applications
+
+  sourceRepos:
+    - "https://github.com/your-org/gitops-eks-demo"
+
+  destinations:
+    - namespace: "sample-app-*"
+      server: https://kubernetes.default.svc
+
+  # Restrict what resources apps can create
+  namespaceResourceWhitelist:
+    - group: apps
+      kind: Deployment
+    - group: ""
+      kind: Service
+    - group: networking.k8s.io
+      kind: Ingress
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: ServiceAccount
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: keda.sh
+      kind: ScaledObject
+
+  roles:
+    - name: app-developer
+      description: Deploy applications
+      policies:
+        - p, proj:applications:app-developer, applications, sync, applications/*, allow
+        - p, proj:applications:app-developer, applications, get, applications/*, allow
+      groups:
+        - developers

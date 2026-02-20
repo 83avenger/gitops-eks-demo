@@ -1,0 +1,10 @@
+autoDiscovery:
+  clusterName: ${cluster_name}
+awsRegion: ${region}
+rbac:
+  serviceAccount:
+    annotations:
+      eks.amazonaws.com/role-arn: ${role_arn}
+extraArgs:
+  balance-similar-node-groups: true
+  scale-down-delay-after-add: 5m

@@ -1,0 +1,34 @@
+# -----------------------------------------------------------------------------
+# App of Apps Pattern — Single entry point for all applications
+# Apply this ONCE: kubectl apply -f argocd/apps/app-of-apps.yaml
+# ArgoCD then manages everything else automatically
+# -----------------------------------------------------------------------------
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: app-of-apps
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: platform
+
+  source:
+    repoURL: https://github.com/YOUR_ORG/gitops-eks-demo.git   # Update this
+    targetRevision: HEAD
+    path: argocd/apps
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=foreground
+      - ApplyOutOfSyncOnly=true

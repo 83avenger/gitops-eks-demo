@@ -39,7 +39,7 @@ spec:
 
       containers:
         - name: sample-app
-          image: ghcr.io/your-org/sample-app:latest
+          image: ghcr.io/83avenger/sample-app:latest
           ports:
             - name: http
               containerPort: 8080
